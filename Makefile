@@ -2,7 +2,7 @@ ifneq ($(origin CC),environment)
 CC := gcc
 endif
 
-cflags = -ansi -g -O2 -Wall -Wextra
+cflags = -ansi -g -O0 -Wall -Wextra
 ifneq ($(origin CFLAGS),environment)
 CFLAGS := $(cflags)
 else
