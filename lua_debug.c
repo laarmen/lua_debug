@@ -20,7 +20,7 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
 
     addr.sun_family = AF_UNIX;
     strcpy(addr.sun_path, sock_addr);
-    if (connect(sock, (struct sockaddr *)(&addr), sizeof(addr)) != 0)
+    if (connect(sock, (struct sockaddr *)(&addr), sizeof(addr.sun_family)+strlen(addr.sun_path)) != 0)
         lua_error(l);
 
     /* Check the current flags */
