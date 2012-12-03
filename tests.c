@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2012 Simon Chopin <chopin.simon@gmail.com>
+ *
+ * This code is under the "Expat" license as specified in the COPYING file.
+ * Do NOT remove this copyright/license notice.
+ */
+
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
