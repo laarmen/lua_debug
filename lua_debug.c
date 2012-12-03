@@ -1,4 +1,5 @@
-#include "lua/lua.h"
+
+#include <lua.h>
 
 #include <assert.h>
 #include <string.h>
