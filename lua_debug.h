@@ -3,7 +3,7 @@
 
 struct lua_State;
 
-int lua_debug_init(lua_State * l);
+int lua_debug_init(lua_State * l, const char * sock_addr);
 
 #endif
 
