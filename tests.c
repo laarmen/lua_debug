@@ -1,7 +1,27 @@
 #include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
 
 #include "lua_debug.h"
 
+static const luaL_Reg STANDARD_LIBS[] = {
+    { "_G", luaopen_base },
+    { LUA_TABLIBNAME, luaopen_table },
+    { LUA_STRLIBNAME, luaopen_string },
+    { LUA_MATHLIBNAME, luaopen_math },
+    { LUA_DBLIBNAME, luaopen_debug },
+    { 0, 0 }
+};
+
 int main() {
+    lua_State * l = (lua_State *)luaL_newstate();
+    const luaL_Reg *lib;
+
+    for (lib = STANDARD_LIBS; lib->func; ++lib) {
+        luaL_requiref(l, lib->name, lib->func, 1);
+        lua_pop(l, 1);
+    }
+
+    lua_debug_init(l, "/tmp/socket_lua_debug");
     return 0;
 }
