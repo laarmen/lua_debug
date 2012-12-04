@@ -23,6 +23,12 @@ static const luaL_Reg STANDARD_LIBS[] = {
     { 0, 0 }
 };
 
+int lua_sleep(lua_State * l) {
+    int seconds = lua_tointeger(l, 1);
+    sleep(seconds);
+    return 0;
+}
+
 int main() {
     lua_State * l = (lua_State *)luaL_newstate();
     const luaL_Reg *lib;
@@ -32,8 +38,10 @@ int main() {
         lua_pop(l, 1);
     }
 
+    lua_register(l, "sleep", lua_sleep);
     luaL_dofile(l, "debug.lua");
     lua_debug_init(l, "/tmp/socket_lua_debug");
+    luaL_dofile(l, "tests.lua");
     lua_debug_close(l);
     return 0;
 }
