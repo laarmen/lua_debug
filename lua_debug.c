@@ -35,7 +35,7 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
     if ((flags = fcntl(sock, F_GETFL, 0)) == -1)
         flags = 0;
     /* Non-blocking */
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    /*fcntl(sock, F_SETFL, flags | O_NONBLOCK);*/
 
     lua_getglobal(l, "debug");
     lua_pushstring(l, "__dbsock_fd");
@@ -53,15 +53,20 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
 
 int lua_debug_read(lua_State * l) {
     char buf[1024];
-    int sock, res;
+    int sock, res, flags;
 
+    if (lua_gettop(l) >= 1 && lua_toboolean(l, 1)) {
+        flags = 0;
+    } else {
+        flags = MSG_DONTWAIT;
+    }
     lua_getglobal(l, "debug");
     lua_pushstring(l, "__socket_fd");
     lua_gettable(l, -2);
     sock = lua_tointeger(l, -1);
     lua_pop(l, 2);
 
-    res = recv(sock, buf, 1024, 0);
+    res = recv(sock, buf, 1024, flags);
     if (res == -1 && errno != EAGAIN) {
         luaL_error(l, strerror(errno));
     }
