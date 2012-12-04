@@ -10,24 +10,34 @@ from socket import socket, AF_UNIX, SOCK_STREAM
 import os
 import time
 
-s = socket(AF_UNIX, SOCK_STREAM)
-s.bind('/tmp/socket_lua_debug')
-s.listen(1)
-try:
-    while (True):
-        lua = s.accept()[0]
-        print "Connected with Lua."
-        time.sleep(2)
-        print("halting.")
-        lua.send("halt\n")
-        ack = lua.recv(1024);
-        if ack.startswith("ACK"):
-            print("ACK.")
-            time.sleep(2)
-            print("continuing")
-            lua.send("continue\n")
-except KeyboardInterrupt:
-    pass
-lua.close()
+class Ldb(object):
+    def __init__(self, sock_path='/tmp/socket_lua_debug'):
+        self._s = socket(AF_UNIX, SOCK_STREAM)
+        self._sock_path = sock_path
+        self._s.bind(sock_path)
+        self._s.listen(1)
 
-os.remove("/tmp/socket_lua_debug") # I don't know why it doesn't do it by itself.
+    def run(self):
+        self._lua = self._s.accept()[0]
+        self._lua.send('run');
+
+    def start(self):
+        self.run()
+        self.halt()
+
+    def halt(self):
+        self._lua.send("halt\n")
+
+    def continue_(self): # it is a language keyword, hence the trailing _
+        self._lua.send("continue\n")
+
+    def reload(self):
+        self._lua.close()
+        self.run()
+
+    def __del__(self):
+        if (hasattr(self, "_lua")):
+            self._lua.close()
+        self._s.close()
+        os.remove(self._sock_path)
+
