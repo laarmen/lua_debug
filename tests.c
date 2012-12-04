@@ -11,6 +11,9 @@
 
 #include "lua_debug.h"
 
+#include <unistd.h>
+#include <stdio.h>
+
 static const luaL_Reg STANDARD_LIBS[] = {
     { "_G", luaopen_base },
     { LUA_TABLIBNAME, luaopen_table },
@@ -30,5 +33,6 @@ int main() {
     }
 
     lua_debug_init(l, "/tmp/socket_lua_debug");
+    lua_debug_close(l);
     return 0;
 }

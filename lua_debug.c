@@ -14,6 +14,7 @@
 #include <sys/un.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 
 int lua_debug_readline(lua_State *);
 int lua_debug_send(lua_State *);
@@ -87,6 +88,22 @@ int lua_debug_send(lua_State * l) {
 
     /* TODO: proper error handling. */
     send(sock, str, length, 0);
+
+    return 0;
+}
+
+int lua_debug_close(lua_State * l) {
+    int sock;
+    lua_getglobal(l, "debug");
+    lua_pushstring(l, "__socket_fd");
+    lua_gettable(l, -2);
+    sock = lua_tointeger(l, -1);
+    lua_pop(l, 1);
+    close(sock);
+    lua_pushstring(l, "__socket_fd");
+    lua_pushnil(l);
+    lua_settable(l, -3);
+    lua_pop(l, 1);
 
     return 0;
 }
