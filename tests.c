@@ -32,6 +32,7 @@ int main() {
         lua_pop(l, 1);
     }
 
+    luaL_dofile(l, "debug.lua");
     lua_debug_init(l, "/tmp/socket_lua_debug");
     lua_debug_close(l);
     return 0;

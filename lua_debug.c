@@ -47,6 +47,10 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
     lua_pushstring(l, "dbsock_send");
     lua_pushcfunction(l, lua_debug_send);
     lua_settable(l, -3);
+    lua_pushstring(l, "load_debugger");
+    lua_gettable(l, -2);
+    lua_call(l, 0, 0);
+    lua_pop(l, 1);
 
     return 0;
 }
