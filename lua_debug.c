@@ -6,6 +6,7 @@
  */
 
 #include <lua.h>
+#include <lauxlib.h>
 
 #include <assert.h>
 #include <string.h>
@@ -16,7 +17,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-int lua_debug_readline(lua_State *);
+int lua_debug_read(lua_State *);
 int lua_debug_send(lua_State *);
 
 int lua_debug_init(lua_State * l, const char * sock_addr) {
@@ -40,8 +41,8 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
     lua_pushstring(l, "__dbsock_fd");
     lua_pushinteger(l, sock);
     lua_settable(l, -3);
-    lua_pushstring(l, "dbsock_readline");
-    lua_pushcfunction(l, lua_debug_readline);
+    lua_pushstring(l, "dbsock_read");
+    lua_pushcfunction(l, lua_debug_read);
     lua_settable(l, -3);
     lua_pushstring(l, "dbsock_send");
     lua_pushcfunction(l, lua_debug_send);
@@ -50,9 +51,9 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
     return 0;
 }
 
-int lua_debug_readline(lua_State * l) {
+int lua_debug_read(lua_State * l) {
     char buf[1024];
-    int i, sock, res;
+    int sock, res;
 
     lua_getglobal(l, "debug");
     lua_pushstring(l, "__socket_fd");
@@ -60,16 +61,12 @@ int lua_debug_readline(lua_State * l) {
     sock = lua_tointeger(l, -1);
     lua_pop(l, 2);
 
-    for(i = 0 ; i < 1024 ; ++i) {
-        res = recv(sock, &(buf[i]), 1, 0);
-        if (res == -1) {
-            assert(errno == EAGAIN || errno == EWOULDBLOCK);
-            break;
-        } else if (buf[i] == '\n')
-            break;
+    res = recv(sock, buf, 1024, 0);
+    if (res == -1 && errno != EAGAIN) {
+        luaL_error(l, strerror(errno));
     }
-    if (i) {
-        lua_pushlstring(l, buf, i);
+    if (res > 0) {
+        lua_pushlstring(l, buf, res);
         return 1;
     }
     return 0;
