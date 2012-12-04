@@ -22,6 +22,7 @@ int lua_debug_send(lua_State *);
 
 int lua_debug_init(lua_State * l, const char * sock_addr) {
     int flags;
+    char run_buf[] = {' ', ' ', ' '};
     struct sockaddr_un addr;
 
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -30,6 +31,10 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
     strcpy(addr.sun_path, sock_addr);
     if (connect(sock, (struct sockaddr *)(&addr), sizeof(addr.sun_family)+strlen(addr.sun_path)) != 0)
         luaL_error(l, strerror(errno));
+    while (run_buf[0] != 'r' && run_buf[1] != 'u' && run_buf[2] != 'n') {
+        if(recv(sock, run_buf, 3, 0) < 0)
+            luaL_error(l, strerror(errno));
+    }
 
     /* Check the current flags */
     if ((flags = fcntl(sock, F_GETFL, 0)) == -1)
