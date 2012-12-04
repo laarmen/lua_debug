@@ -51,6 +51,26 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
     return 0;
 }
 
+/*
+ * Function: dbsock_read
+ *
+ * Get data from the debug socket.
+ *
+ * > cmd = debug.dbsock_read()
+ *
+ * Parameters:
+ *
+ *   non-blocking - Defaults to false. If true, the function halts until it can
+ *              return a whole line.
+ * Returns:
+ *
+ *   data - the data received through the socket.
+ *
+ * Availability:
+ *
+ *  0.1
+ *
+ */
 int lua_debug_read(lua_State * l) {
     char buf[1024];
     int sock, res, flags;
@@ -77,6 +97,22 @@ int lua_debug_read(lua_State * l) {
     return 0;
 }
 
+/*
+ * Function: dbsock_send
+ *
+ * Send data through the debug socket.
+ *
+ * > debug.dbsock_send("ACK")
+ *
+ * Parameters:
+ *
+ *   data - Data to send. 
+ *
+ * Availability:
+ *
+ *  0.1
+ *
+ */
 int lua_debug_send(lua_State * l) {
     size_t length;
     int sock;
