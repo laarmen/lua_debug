@@ -17,6 +17,11 @@ class Ldb(object):
         self._s.bind(sock_path)
         self._s.listen(1)
 
+    def _wait_ack(self, cmd_name):
+        ack = str()
+        while not ack.startswith("ACK {0}".format(cmd_name)):
+            ack = self._lua.recv(10)
+
     def run(self):
         self._lua = self._s.accept()[0]
         self._lua.send('run');
@@ -27,13 +32,15 @@ class Ldb(object):
 
     def halt(self):
         self._lua.send("halt\n")
+        self._wait_ack("halt")
 
     def continue_(self): # it is a language keyword, hence the trailing _
         self._lua.send("continue\n")
+        self._wait_ack("continue")
 
     def reload(self):
         self._lua.close()
-        self.run()
+        self.start()
 
     def __del__(self):
         if (hasattr(self, "_lua")):

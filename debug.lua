@@ -7,6 +7,7 @@ local hook = function (event_type, line_nb)
         while not continue do
             cmd = debug.dbsock_read(true)
             if string.find(cmd, "continue", 1, true) == 1 then
+                debug.dbsock_send("ACK continue")
                 continue = true
             end
         end
