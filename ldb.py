@@ -20,7 +20,7 @@ class Ldb(object):
     def _wait_ack(self, cmd_name):
         ack = str()
         while not ack.startswith("ACK {0}".format(cmd_name)):
-            ack = self._lua.recv(10)
+            ack = self._lua.recv(1024)
 
     def run(self):
         self._lua = self._s.accept()[0]
