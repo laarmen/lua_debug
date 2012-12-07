@@ -69,7 +69,7 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
  *
  * Parameters:
  *
- *   non-blocking - Defaults to false. If true, the function halts until it can
+ *   non-blocking - Defaults to false. If false, the function halts until it can
  *              return a whole line.
  * Returns:
  *
@@ -84,7 +84,7 @@ int lua_debug_read(lua_State * l) {
     char buf[1024];
     int sock, res, flags;
 
-    if (lua_gettop(l) >= 1 && lua_toboolean(l, 1)) {
+    if (lua_gettop(l) == 0 || !lua_toboolean(l, 1)) {
         flags = 0;
     } else {
         flags = MSG_DONTWAIT;
