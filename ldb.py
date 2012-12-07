@@ -38,6 +38,12 @@ class Ldb(object):
         self._lua.send("continue\n")
         self._wait_ack("continue")
 
+    def get(self, var_name):
+        self._lua.send("get_var {0}".format(var_name))
+        self._wait_ack("get_var")
+        answer = self._lua.recv(1024)
+        return answer
+
     def backtrace(self):
         bt = []
         self._lua.send("backtrace")
