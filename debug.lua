@@ -1,7 +1,7 @@
 local word_pattern = "[%w_]+"
 
 local hook = function (event_type, line_nb)
-    local msg = debug.dbsock_read(true)
+    local msg = debug.dbsock_read(false)
     if msg and string.find(msg, 'halt', 1, true) == 1 then
         debug.dbsock_send("ACK halt")
         local continue = false
