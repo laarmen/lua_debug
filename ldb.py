@@ -38,6 +38,19 @@ class Ldb(object):
         self._lua.send("continue\n")
         self._wait_ack("continue")
 
+    def backtrace(self):
+        bt = []
+        self._lua.send("backtrace")
+        answer = self._lua.recv(1024)
+        print answer
+        print "end of answer"
+        while not answer.startswith("end backtrace"):
+            self._lua.send("ACK frame")
+            bt.append(answer)
+            answer = self._lua.recv(1024)
+        self._lua.send("ACK end")
+        return bt
+
     def reload(self):
         self._lua.close()
         self.start()
