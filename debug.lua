@@ -26,10 +26,69 @@ debug.build_lookup_table = function (stack_level)
     return ret
 end
     
+local function_breakpoints = {} -- Breakpoints per function.
+
+debug.build_breakpoints_table = function(function_infos)
+    local filename = string.gmatch(function_infos.source, "@(.*)")()
+    local affined_bps = {}
+    if filename then
+        local bps = debug.breakpoints[filename]
+        if bps then
+
+            -- We need the lines sorted.
+            local sorted_active = {}
+            -- Simple insertion sort.
+            for k,_ in pairs(function_infos.activelines) do
+                local inserted = false
+                for i,a in ipairs(sorted_active) do
+                    if k < a then
+                        table.insert(sorted_active, i, k)
+                        inserted = true
+                        break
+                    end
+                end
+                if not inserted then
+                    table.insert(sorted_active, k)
+                end
+            end
+
+            local iter_active = ipairs(sorted_active)
+            local iter_breakpoints = ipairs(bps)
+            local i,a = iter_active(sorted_active, 0)
+            local j,b = iter_breakpoints(bps, 0)
+            while a and b do
+                while b and b < a do -- Look for the next breakpoint in the function
+                    j,b = iter_breakpoints(bps, j)
+                end
+                while b and a and b >= a do -- Use the next active line.
+                    i, a = iter_active(sorted_active, i)
+                end
+                if a and b then
+                    affined_bps[a] = true
+                end
+            end
+        end
+    end
+    return affined_bps
+end
+
 local hook = function (event_type, line_nb)
+    local infos = debug.getinfo(2)
+    local bps = function_breakpoints[infos.func]
+    if not bps then
+        bps = debug.build_breakpoints_table(debug.getinfo(2, "SL"))
+        function_breakpoints[infos.func] = bps
+    end
+
+    local halted = bps[line_nb]
+
     local msg = debug.dbsock_read(true)
     if msg and string.find(msg, 'halt', 1, true) == 1 then
         debug.dbsock_send("ACK halt")
+        halted = true
+    end
+
+    if halted then
         local continue = false
         local lookup_stack = {}
         local stack_level = 1
@@ -91,5 +150,6 @@ local hook = function (event_type, line_nb)
 end
 
 debug.load_debugger = function() 
+    debug.breakpoints = {} -- Format : breakpoints[file] = {line_1, line_2, ...}
     debug.sethook(hook, "crl")
 end
