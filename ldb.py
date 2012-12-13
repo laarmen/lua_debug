@@ -43,6 +43,14 @@ class Ldb(object):
         answer = self._lua.recv(1024)
         return answer
 
+    def up(self):
+        self._lua.send("up\n")
+        self._wait_ack("up")
+
+    def down(self):
+        self._lua.send("down")
+        self._wait_ack("down")
+
     def backtrace(self):
         bt = []
         self._lua.send("backtrace")

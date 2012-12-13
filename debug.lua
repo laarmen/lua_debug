@@ -37,6 +37,17 @@ local hook = function (event_type, line_nb)
                 debug.dbsock_send("ACK continue")
                 continue = true
 
+            elseif cmd_name == "up" then
+                debug.dbsock_send("ACK up")
+                stack_level = stack_level+1
+                if debug.getinfo(stack_level) == nil then
+                    stack_level = stack_level-1
+                end
+
+            elseif cmd_name == "down" then
+                debug.dbsock_send("ACK down")
+                stack_level = math.min(1, stack_level-1)
+
 
             elseif cmd_name == "backtrace" then
                 debug.dbsock_send(debug.traceback(nil, 1+stack_level))
