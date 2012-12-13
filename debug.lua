@@ -1,3 +1,8 @@
+-- Copyright (C) 2012 Simon Chopin <chopin.simon@gmail.com>
+--
+-- This code is under the "Expat" license as specified in the COPYING file.
+-- Do NOT remove this copyright/license notice.
+
 local word_pattern = "[%w_]+"
 
 debug.build_lookup_table = function (stack_level)
