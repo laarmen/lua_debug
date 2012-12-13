@@ -56,8 +56,6 @@ local hook = function (event_type, line_nb)
                 local var_name = words()
 
                 if var_name then
-                    debug.dbsock_send("ACK get_var")
-
                     local lookup_table = lookup_stack[stack_level]
                     if not lookup_table then
                         lookup_table = debug.build_lookup_table(stack_level+2) 
