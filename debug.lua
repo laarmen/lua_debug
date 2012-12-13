@@ -58,7 +58,7 @@ local hook = function (event_type, line_nb)
                 if var_name then
                     local lookup_table = lookup_stack[stack_level]
                     if not lookup_table then
-                        lookup_table = debug.build_lookup_table(stack_level+2) 
+                        lookup_table = debug.build_lookup_table(stack_level+1) 
                         lookup_stack[stack_level] = lookup_table
                     end
                     local value = lookup_table[var_name]
@@ -73,6 +73,7 @@ local hook = function (event_type, line_nb)
         end
     end
 end
+
 debug.load_debugger = function() 
     debug.sethook(hook, "crl")
 end
