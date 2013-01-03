@@ -8,6 +8,8 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+const char * ldb_sock_addr = "/tmp/ldb_sock";
+
 #include <assert.h>
 #include <string.h>
 #include <sys/types.h>
@@ -26,13 +28,18 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
 
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
     addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, sock_addr);
+    strcpy(addr.sun_path, ldb_sock_addr);
 
-    if (connect(sock, (struct sockaddr *)(&addr), sizeof(addr.sun_family)+strlen(addr.sun_path)) != 0)
+    if (connect(sock, (struct sockaddr *)(&addr), sizeof(addr.sun_family)+strlen(addr.sun_path)) != 0) {
+#ifdef DEBUG
         luaL_error(l, strerror(errno));
-    while (run_buf[0] != 'r' && run_buf[1] != 'u' && run_buf[2] != 'n') {
-        if(recv(sock, run_buf, 3, 0) < 0)
-            luaL_error(l, strerror(errno));
+#else
+        return errno;
+#endif
+    }
+
+    while (strncmp(run_buf, "run", 3) != 0) {
+        recv(sock, run_buf, 3, 0);
     }
 
     lua_getglobal(l, "debug");
@@ -89,9 +96,7 @@ int lua_debug_read(lua_State * l) {
     lua_pop(l, 2);
 
     res = recv(sock, buf, 1024, flags);
-    if (res == -1 && errno != EAGAIN) {
-        luaL_error(l, strerror(errno));
-    }
+    if (res == -1 && errno != EAGAIN) { luaL_error(l, strerror(errno)); }
     if (res > 0) {
         lua_pushlstring(l, buf, res);
         return 1;

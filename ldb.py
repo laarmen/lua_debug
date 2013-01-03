@@ -11,7 +11,7 @@ import os
 import time
 
 class Ldb(object):
-    def __init__(self, sock_path='/tmp/socket_lua_debug'):
+    def __init__(self, sock_path='/tmp/ldb_sock'):
         self._s = socket(AF_UNIX, SOCK_STREAM)
         self._sock_path = sock_path
         self._s.bind(sock_path)
