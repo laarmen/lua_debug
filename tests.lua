@@ -1,4 +1,4 @@
-debug.breakpoints['tests.lua'] = {5, 10}
+debug.breakpoints['tests.lua'] = {11}
 i = 10
 f = function (a, b)
     local c = "test"
