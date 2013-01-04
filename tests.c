@@ -20,6 +20,7 @@ static const luaL_Reg STANDARD_LIBS[] = {
     { LUA_STRLIBNAME, luaopen_string },
     { LUA_MATHLIBNAME, luaopen_math },
     { LUA_DBLIBNAME, luaopen_debug },
+    { LUA_LOADLIBNAME, luaopen_package },
     { 0, 0 }
 };
 
