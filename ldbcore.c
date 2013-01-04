@@ -19,11 +19,18 @@ const char * ldb_sock_addr = "/tmp/ldb_sock";
 #include <errno.h>
 #include <unistd.h>
 
-int lua_debug_read(lua_State *);
-int lua_debug_send(lua_State *);
+int ldb_dbsock_read(lua_State *);
+int ldb_dbsock_send(lua_State *);
+int ldb_dbsock_close(lua_State *);
 
-int lua_debug_init(lua_State * l, const char * sock_addr) {
-    char run_buf[] = {' ', ' ', ' '};
+static const luaL_Reg ldb[] = {
+    {"dbsock_read", ldb_dbsock_read},
+    {"dbsock_send", ldb_dbsock_send},
+    {NULL, NULL}
+};
+
+int luaopen_ldbcore(lua_State * l) {
+    char run_buf[] = "  "; /* Plus the final \0 */
     struct sockaddr_un addr;
 
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -43,18 +50,7 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
     }
 
     lua_getglobal(l, "debug");
-    lua_pushstring(l, "__dbsocket_fd");
-    lua_pushinteger(l, sock);
-    lua_settable(l, -3);
-    lua_pushstring(l, "dbsock_read");
-    lua_pushcfunction(l, lua_debug_read);
-    lua_settable(l, -3);
-    lua_pushstring(l, "dbsock_send");
-    lua_pushcfunction(l, lua_debug_send);
-    lua_settable(l, -3);
-    lua_pushstring(l, "load_debugger");
-    lua_gettable(l, -2);
-    lua_call(l, 0, 0);
+    luaL_setfuncs(l, ldb, 0);
     lua_pop(l, 1);
 
     return 0;
@@ -80,7 +76,7 @@ int lua_debug_init(lua_State * l, const char * sock_addr) {
  *  0.1
  *
  */
-int lua_debug_read(lua_State * l) {
+int ldb_dbsock_read(lua_State * l) {
     char buf[1024];
     int sock, res, flags;
 
@@ -120,7 +116,7 @@ int lua_debug_read(lua_State * l) {
  *  0.1
  *
  */
-int lua_debug_send(lua_State * l) {
+int ldb_dbsock_send(lua_State * l) {
     size_t length;
     int sock;
     const char * str = lua_tolstring(l, 1, &length);
@@ -137,7 +133,7 @@ int lua_debug_send(lua_State * l) {
     return 0;
 }
 
-int lua_debug_close(lua_State * l) {
+int ldb_close(lua_State * l) {
     int sock;
     lua_getglobal(l, "debug");
     lua_pushstring(l, "__socket_fd");

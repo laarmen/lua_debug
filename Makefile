@@ -18,15 +18,18 @@ endif
 
 INCLUDES ?= -I/usr/include/lua5.2
 
-all: tests
+all: ldbcore.so
 
-lua_debug.o: lua_debug.c lua_debug.h
+ldbcore.o: ldbcore.c ldbcore.h
+	$(CC) -fPIC -o $@ $< $(CFLAGS) $(INCLUDES) -c
+
+ldbcore.so: ldbcore.o
+	$(CC) -shared -fPIC -o $@ $<
+
+tests.o: tests.c ldbcore.h
 	$(CC) -o $@ $< $(CFLAGS) $(INCLUDES) -c
 
-tests.o: tests.c lua_debug.h
-	$(CC) -o $@ $< $(CFLAGS) $(INCLUDES) -c
-
-tests: tests.o lua_debug.o
+tests: tests.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:

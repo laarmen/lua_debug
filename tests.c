@@ -9,7 +9,7 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
-#include "lua_debug.h"
+#include "ldbcore.h"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -29,6 +29,11 @@ int lua_sleep(lua_State * l) {
     return 0;
 }
 
+int check_lua_error(int lua_err) {
+    if (lua_err == LUA_OK)
+        return 1;
+    return 0;
+}
 int main() {
     lua_State * l = (lua_State *)luaL_newstate();
     const luaL_Reg *lib;
@@ -39,9 +44,12 @@ int main() {
     }
 
     lua_register(l, "sleep", lua_sleep);
-    luaL_dofile(l, "debug.lua");
-    lua_debug_init(l, "/tmp/socket_lua_debug");
-    luaL_dofile(l, "tests.lua");
-    lua_debug_close(l);
-    return 0;
+    if (check_lua_error(luaL_dofile(l, "ldb.lua")))
+        if (check_lua_error(luaL_dofile(l, "tests.lua")))
+            return 0;
+        else
+            printf("Error in tests.lua");
+    else
+        printf("Error in ldb.lua");
+    return 1;
 }

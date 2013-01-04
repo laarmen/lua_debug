@@ -153,3 +153,7 @@ debug.load_debugger = function()
     debug.breakpoints = {} -- Format : breakpoints[file] = {line_1, line_2, ...}
     debug.sethook(hook, "crl")
 end
+
+if pcall(function () require("ldbcore") end) or debug.__dbsocket_fd then
+debug.load_debugger()
+end
