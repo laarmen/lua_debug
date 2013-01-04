@@ -51,6 +51,9 @@ int luaopen_ldbcore(lua_State * l) {
 
     lua_getglobal(l, "debug");
     luaL_setfuncs(l, ldb, 0);
+    lua_pushstring(l, "__dbsocket_fd");
+    lua_pushinteger(l, sock);
+    lua_settable(l, -3);
     lua_pop(l, 1);
 
     return 0;
