@@ -29,9 +29,13 @@ int lua_sleep(lua_State * l) {
     return 0;
 }
 
-int check_lua_error(int lua_err) {
+int do_lua_file(lua_State * l, const char * filename) {
+    int lua_err = luaL_dofile(l, filename);
     if (lua_err == LUA_OK)
         return 1;
+    printf("Error in %s:\n", filename);
+    printf("%s", lua_tostring(l, -1));
+    lua_pop(l, 1);
     return 0;
 }
 int main() {
@@ -44,12 +48,8 @@ int main() {
     }
 
     lua_register(l, "sleep", lua_sleep);
-    if (check_lua_error(luaL_dofile(l, "ldb.lua")))
-        if (check_lua_error(luaL_dofile(l, "tests.lua")))
+    if (do_lua_file(l, "ldb.lua"))
+        if (do_lua_file(l, "tests.lua"))
             return 0;
-        else
-            printf("Error in tests.lua");
-    else
-        printf("Error in ldb.lua");
     return 1;
 }
