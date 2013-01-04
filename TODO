@@ -12,3 +12,6 @@ TODO:
   * Enhance variable handling:
     + List currently reachable variables (for autocompletion)
     + Assign a value to a variable
+
+  * Module destruction
+    + Find a way to automatically release the resources allocated in ldbcore => empty userdata with destructor ?
