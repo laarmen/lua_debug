@@ -1,0 +1,14 @@
+TODO:
+
+  * Add an API to deal with the breakpoints
+    + Creation/deletion
+    + List current breakpoints
+    + Disable/enable ?
+    + Conditional ? => Might be tricky.
+
+  * Do the GDB interface thing
+    + Design the CLI (something close to the C debugging stuff)
+
+  * Enhance variable handling:
+    + List currently reachable variables (for autocompletion)
+    + Assign a value to a variable
