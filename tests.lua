@@ -1,6 +1,3 @@
-if debug.breakpoints then
-    debug.breakpoints['tests.lua'] = {9}
-end
 i = 10
 f = function (a, b)
     local c = "test"

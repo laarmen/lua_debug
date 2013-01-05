@@ -60,11 +60,14 @@ debug.build_breakpoints_table = function(function_infos)
                 while b and b < a do -- Look for the next breakpoint in the function
                     j,b = iter_breakpoints(bps, j)
                 end
-                while b and a and b >= a do -- Use the next active line.
+                while b and a and b > a do -- Use the next active line.
                     i, a = iter_active(sorted_active, i)
                 end
                 if a and b then
-                    affined_bps[a] = true
+                    if a == b then
+                        affined_bps[a] = true
+                    end
+                    i, a = iter_active(sorted_active, i)
                 end
             end
         end
