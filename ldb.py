@@ -74,3 +74,9 @@ class Ldb(object):
         self._s.close()
         os.remove(self._sock_path)
 
+if __name__ == '__main__':
+    import sys
+    from IPython import embed
+    l = Ldb() if len(sys.argv) < 2 else Ldb(sys.argv[1])
+    embed()
+
