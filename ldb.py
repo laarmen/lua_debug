@@ -43,6 +43,11 @@ class Ldb(object):
         answer = self._lua.recv(1024)
         return answer
 
+    def break_(self, filename, line_nb):
+        self._lua.send("add_breakpoint {0} {1}".format(filename, line_nb))
+        bp_nb = int(self._lua.recv(1024))
+        return None if bp_nb == 0 else bp_nb
+
     def up(self):
         self._lua.send("up\n")
         self._wait_ack("up")

@@ -3,7 +3,7 @@
 -- This code is under the "Expat" license as specified in the COPYING file.
 -- Do NOT remove this copyright/license notice.
 
-local word_pattern = "[%w_]+"
+local word_pattern = "[%S]+"
 
 debug.build_lookup_table = function (stack_level)
     local ret = {}
@@ -147,6 +147,27 @@ local hook = function (event_type, line_nb)
                     debug.dbsock_send("ERR get_var")
                 end
 
+            elseif cmd_name == "add_breakpoint" then
+                -- no data sanitation yet, it'll break when it'll break
+                local file_name = words()
+                local line_number = tonumber(words())
+                local breakpoints = debug.breakpoints[file_name] or {}
+                local i = 1
+                while i <= #breakpoints do
+                    if breakpoints[i] >= line_number then
+                        break
+                    end
+                    i = i+1
+                end
+                if breakpoints[i] ~= line_number then
+                    table.insert(breakpoints, i, line_number)
+                    function_breakpoints = {}
+                    debug.breakpoints[file_name] = breakpoints
+                    table.insert(debug.breakpoint_stack, {file=file_name, line=line_number, disabled=false})
+                    debug.dbsock_send(#(debug.breakpoint_stack))
+                else
+                    debug.dbsock_send("0")
+                end
             end
         end
     end
@@ -154,10 +175,10 @@ end
 
 debug.load_debugger = function() 
     debug.breakpoints = {} -- Format : breakpoints[file] = {line_1, line_2, ...}
+    debug.breakpoint_stack = {} -- Format : linear table, element : {file=string, line=int, disabled=bool}
     debug.sethook(hook, "crl")
 end
 
-local require = require
 local res, err = pcall(function () require "ldbcore" end)
 if res or debug.__dbsocket_fd then
     debug.load_debugger()
