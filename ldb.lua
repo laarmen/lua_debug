@@ -179,9 +179,13 @@ debug.load_debugger = function()
     debug.sethook(hook, "crl")
 end
 
-local res, err = pcall(function () require "ldbcore" end)
-if res or debug.__dbsocket_fd then
+if not debug.__dbsocket_fd then
+    local res, err = pcall(function () require "ldbcore" end)
+    if not res then
+        print(err)
+    end
+end
+-- Assume it has been set in the require if not earlier
+if debug.__dbsocket_fd then
     debug.load_debugger()
-else
-    print(err)
 end

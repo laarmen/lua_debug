@@ -54,7 +54,18 @@ int luaopen_ldbcore(lua_State * l) {
     lua_pushstring(l, "__dbsocket_fd");
     lua_pushinteger(l, sock);
     lua_settable(l, -3);
-    lua_pop(l, 1);
+    
+    lua_pushstring(l, "load_debugger");
+    lua_gettable(l, -2);
+    if (lua_isnil(l, -1)) {
+        const char * script = (access(PREFIX "/share/ldb/ldb.lua", F_OK) == 0) ? PREFIX "/share/ldb/ldb.lua" : "ldb.lua";
+        int lua_err = luaL_dofile(l, script);
+        if (lua_err != LUA_OK) {
+            fprintf(stderr, "Error in ldb.lua: %s", lua_tostring(l, -1));
+            lua_error(l);
+        }
+    }
+    lua_pop(l, 2);
 
     return 0;
 }
