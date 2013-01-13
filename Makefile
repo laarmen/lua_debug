@@ -32,6 +32,12 @@ INCLUDES ?= -I/usr/include/lua5.2
 
 all: libldbcore.so
 
+install: all
+	mkdir -p $(PREFIX)/lib $(PREFIX)/share/ldb
+	install -m 644 libldbcore.so $(PREFIX)/lib/
+	install -m 644 ldb.lua $(PREFIX)/share/ldb/
+	install -m 755 ldb.py $(PREFIX)/share/ldb/
+
 ldbcore.o: ldbcore.c ldbcore.h
 	$(CC) -fPIC -o $@ $< $(CPPFLAGS) $(CFLAGS) $(INCLUDES) -c
 
