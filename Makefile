@@ -30,12 +30,12 @@ endif
 
 INCLUDES ?= -I/usr/include/lua5.2
 
-all: ldbcore.so
+all: libldbcore.so
 
 ldbcore.o: ldbcore.c ldbcore.h
 	$(CC) -fPIC -o $@ $< $(CPPFLAGS) $(CFLAGS) $(INCLUDES) -c
 
-ldbcore.so: ldbcore.o
+libldbcore.so: ldbcore.o
 	$(CC) -shared -fPIC -o $@ $<
 
 tests.o: tests.c ldbcore.h
