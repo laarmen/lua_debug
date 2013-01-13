@@ -9,6 +9,18 @@ else
 CFLAGS := $(cflags) $(CFLAGS)
 endif
 
+ifneq ($(origin PREFIX),environment)
+PREFIX := /
+else
+PREFIX := $(shell readlink -m $(PREFIX))
+endif
+
+ifneq ($(origin CPPFLAGS),environment)
+CPPFLAGS := "-DPREFIX=\"$(PREFIX)\""
+else
+CPPFLAGS := "-DPREFIX=\"$(PREFIX)\"" $(CPPFLAGS)
+endif
+
 ldflags = -llua5.2
 ifneq ($(origin LDFLAGS),environment)
 LDFLAGS := $(ldflags)
@@ -21,7 +33,7 @@ INCLUDES ?= -I/usr/include/lua5.2
 all: ldbcore.so
 
 ldbcore.o: ldbcore.c ldbcore.h
-	$(CC) -fPIC -o $@ $< $(CFLAGS) $(INCLUDES) -c
+	$(CC) -fPIC -o $@ $< $(CPPFLAGS) $(CFLAGS) $(INCLUDES) -c
 
 ldbcore.so: ldbcore.o
 	$(CC) -shared -fPIC -o $@ $<
