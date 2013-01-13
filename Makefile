@@ -42,7 +42,7 @@ tests.o: tests.c ldbcore.h
 	$(CC) -o $@ $< $(CFLAGS) $(INCLUDES) -c
 
 tests: tests.o
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ -L. -lldbcore $(LDFLAGS) -Wl,-rpath .
 
 clean:
 	rm -f *.o

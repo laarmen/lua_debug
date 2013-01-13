@@ -8,10 +8,12 @@
 #ifndef H_LUA_DEBUG
 #define H_LUA_DEBUG
 
-struct lua_State;
+#define LUA_LDBCORELIBNAME "ldbcore"
 
-int lua_debug_init(lua_State * l, const char * sock_addr);
-int lua_debug_close(lua_State * l);
+struct lua_State;
+const char * ldb_sock_addr;
+
+int luaopen_ldbcore(lua_State * l);
 
 #endif
 

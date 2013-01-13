@@ -21,6 +21,7 @@ static const luaL_Reg STANDARD_LIBS[] = {
     { LUA_MATHLIBNAME, luaopen_math },
     { LUA_DBLIBNAME, luaopen_debug },
     { LUA_LOADLIBNAME, luaopen_package },
+    { LUA_LDBCORELIBNAME, luaopen_ldbcore },
     { 0, 0 }
 };
 
@@ -49,8 +50,7 @@ int main() {
     }
 
     lua_register(l, "sleep", lua_sleep);
-    if (do_lua_file(l, "ldb.lua"))
-        if (do_lua_file(l, "tests.lua"))
-            return 0;
+    if (do_lua_file(l, "tests.lua"))
+        return 0;
     return 1;
 }
