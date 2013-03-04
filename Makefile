@@ -10,7 +10,7 @@ CFLAGS := $(cflags) $(CFLAGS)
 endif
 
 ifneq ($(origin PREFIX),environment)
-PREFIX := /
+PREFIX := /usr/local
 else
 PREFIX := $(shell readlink -m $(PREFIX))
 endif
@@ -33,8 +33,9 @@ INCLUDES ?= -I/usr/include/lua5.2
 all: libldbcore.so
 
 install: all
-	mkdir -p $(PREFIX)/lib $(PREFIX)/share/ldb
+	mkdir -p $(PREFIX)/lib $(PREFIX)/share/ldb $(PREFIX)/include
 	install -m 644 libldbcore.so $(PREFIX)/lib/
+	install -m 644 ldbcore.h $(PREFIX)/include/
 	install -m 644 ldb.lua $(PREFIX)/share/ldb/
 	install -m 755 ldb.py $(PREFIX)/share/ldb/
 
