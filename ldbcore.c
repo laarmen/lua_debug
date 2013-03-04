@@ -30,6 +30,7 @@ static const luaL_Reg ldb[] = {
 };
 
 int luaopen_ldbcore(lua_State * l) {
+    int loaded = 1;
     char run_buf[] = "  "; /* Plus the final \0 */
     struct sockaddr_un addr;
 
@@ -49,15 +50,21 @@ int luaopen_ldbcore(lua_State * l) {
         recv(sock, run_buf, 3, 0);
     }
 
-    lua_getglobal(l, "debug");
+    lua_getglobal(l, "ldb");
+    if (lua_isnil(l, -1)) {
+        loaded = 0;
+        lua_pop(l, 1);
+        lua_newtable(l);
+        lua_pushvalue(l, -1);
+        lua_setglobal(l, "ldb");
+    }
     luaL_setfuncs(l, ldb, 0);
     lua_pushstring(l, "__dbsocket_fd");
     lua_pushinteger(l, sock);
     lua_settable(l, -3);
+    lua_pop(l, 1);
     
-    lua_pushstring(l, "load_debugger");
-    lua_gettable(l, -2);
-    if (lua_isnil(l, -1)) {
+    if (!loaded) {
         const char * script = (access(PREFIX "/share/ldb/ldb.lua", F_OK) == 0) ? PREFIX "/share/ldb/ldb.lua" : "ldb.lua";
         int lua_err = luaL_dofile(l, script);
         if (lua_err != LUA_OK) {
@@ -65,7 +72,6 @@ int luaopen_ldbcore(lua_State * l) {
             lua_error(l);
         }
     }
-    lua_pop(l, 2);
 
     return 0;
 }
@@ -99,7 +105,7 @@ int ldb_dbsock_read(lua_State * l) {
     } else {
         flags = MSG_DONTWAIT;
     }
-    lua_getglobal(l, "debug");
+    lua_getglobal(l, "ldb");
     lua_pushstring(l, "__dbsocket_fd");
     lua_gettable(l, -2);
     sock = lua_tointeger(l, -1);
@@ -135,7 +141,7 @@ int ldb_dbsock_send(lua_State * l) {
     int sock;
     const char * str = lua_tolstring(l, 1, &length);
 
-    lua_getglobal(l, "debug");
+    lua_getglobal(l, "ldb");
     lua_pushstring(l, "__dbsocket_fd");
     lua_gettable(l, -2);
     sock = lua_tointeger(l, -1);
@@ -149,7 +155,7 @@ int ldb_dbsock_send(lua_State * l) {
 
 int ldb_close(lua_State * l) {
     int sock;
-    lua_getglobal(l, "debug");
+    lua_getglobal(l, "ldb");
     lua_pushstring(l, "__socket_fd");
     lua_gettable(l, -2);
     sock = lua_tointeger(l, -1);

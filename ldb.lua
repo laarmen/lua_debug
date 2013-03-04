@@ -5,7 +5,10 @@
 
 local word_pattern = "[%S]+"
 
-debug.build_lookup_table = function (stack_level)
+if not ldb then
+    ldb = {}
+end
+ldb.build_lookup_table = function (stack_level)
     local ret = {}
     local info = debug.getinfo(stack_level+1, 'fnu')
     local name = true
@@ -28,11 +31,11 @@ end
     
 local function_breakpoints = {} -- Breakpoints per function.
 
-debug.build_breakpoints_table = function(function_infos)
-    local filename = string.gmatch(function_infos.source, "@(.*)")()
+ldb.build_breakpoints_table = function(function_infos)
+    local filename = string.gmatch(function_infos.source, ".*@(.*)")()
     local affined_bps = {}
     if filename then
-        local bps = debug.breakpoints[filename]
+        local bps = ldb.breakpoints[filename]
         if bps then
 
             -- We need the lines sorted.
@@ -79,15 +82,15 @@ local hook = function (event_type, line_nb)
     local infos = debug.getinfo(2)
     local bps = function_breakpoints[infos.func]
     if not bps then
-        bps = debug.build_breakpoints_table(debug.getinfo(2, "SL"))
+        bps = ldb.build_breakpoints_table(debug.getinfo(2, "SL"))
         function_breakpoints[infos.func] = bps
     end
 
     local halted = bps[line_nb]
 
-    local msg = debug.dbsock_read(true)
+    local msg = ldb.dbsock_read(true)
     if msg and string.find(msg, 'halt', 1, true) == 1 then
-        debug.dbsock_send("ACK halt")
+        ldb.dbsock_send("ACK halt")
         halted = true
     end
 
@@ -96,37 +99,37 @@ local hook = function (event_type, line_nb)
         local lookup_stack = {}
         local stack_level = 1
         while not continue do
-            cmd = debug.dbsock_read()
+            cmd = ldb.dbsock_read()
             words = string.gmatch(cmd, word_pattern)
             cmd_name = words()
 
             if cmd_name == "continue" then
-                debug.dbsock_send("ACK continue")
+                ldb.dbsock_send("ACK continue")
                 continue = true
 
             elseif cmd_name == "up" then
-                debug.dbsock_send("ACK up")
+                ldb.dbsock_send("ACK up")
                 stack_level = stack_level+1
                 if debug.getinfo(stack_level) == nil then
                     stack_level = stack_level-1
                 end
 
             elseif cmd_name == "down" then
-                debug.dbsock_send("ACK down")
+                ldb.dbsock_send("ACK down")
                 stack_level = math.min(1, stack_level-1)
 
 
             elseif cmd_name == "backtrace" then
-                debug.dbsock_send(debug.traceback(nil, 1+stack_level))
+                ldb.dbsock_send(debug.traceback(nil, 1+stack_level))
 
                 local ack = ""
                 while not (string.find(ack, 'ACK frame', 1, true) == 1) do
-                    ack = debug.dbsock_read()
+                    ack = ldb.dbsock_read()
                 end
 
-                debug.dbsock_send("end backtrace")
+                ldb.dbsock_send("end backtrace")
                 while not (string.find(ack, 'ACK end', 1, true) == 1) do
-                    ack = debug.dbsock_read()
+                    ack = ldb.dbsock_read()
                 end
 
 
@@ -136,22 +139,22 @@ local hook = function (event_type, line_nb)
                 if var_name then
                     local lookup_table = lookup_stack[stack_level]
                     if not lookup_table then
-                        lookup_table = debug.build_lookup_table(stack_level+1) 
+                        lookup_table = ldb.build_lookup_table(stack_level+1) 
                         lookup_stack[stack_level] = lookup_table
                     end
                     local value = lookup_table[var_name]
 
-                    debug.dbsock_send(type(value).." "..tostring(value))
+                    ldb.dbsock_send(type(value).." "..tostring(value))
 
                 else
-                    debug.dbsock_send("ERR get_var")
+                    ldb.dbsock_send("ERR get_var")
                 end
 
             elseif cmd_name == "add_breakpoint" then
                 -- no data sanitation yet, it'll break when it'll break
                 local file_name = words()
                 local line_number = tonumber(words())
-                local breakpoints = debug.breakpoints[file_name] or {}
+                local breakpoints = ldb.breakpoints[file_name] or {}
                 local i = 1
                 while i <= #breakpoints do
                     if breakpoints[i] >= line_number then
@@ -159,33 +162,41 @@ local hook = function (event_type, line_nb)
                     end
                     i = i+1
                 end
+                print(ldb.breakpoints)
                 if breakpoints[i] ~= line_number then
                     table.insert(breakpoints, i, line_number)
                     function_breakpoints = {}
-                    debug.breakpoints[file_name] = breakpoints
-                    table.insert(debug.breakpoint_stack, {file=file_name, line=line_number, disabled=false})
-                    debug.dbsock_send(#(debug.breakpoint_stack))
+                    ldb.breakpoints[file_name] = breakpoints
+                    print(ldb.breakpoints)
+                    for k,v in pairs(ldb.breakpoints) do
+                        print(tostring(k)..": "..tostring(v))
+                    end
+                    table.insert(ldb.breakpoint_stack, {file=file_name, line=line_number, disabled=false})
+                    print("Sending "..tostring(#(ldb.breakpoint_stack)))
+                    ldb.dbsock_send(#(ldb.breakpoint_stack))
                 else
-                    debug.dbsock_send("0")
+                    print("Sending 0")
+                    ldb.dbsock_send("0")
                 end
             end
         end
     end
 end
 
-debug.load_debugger = function() 
-    debug.breakpoints = {} -- Format : breakpoints[file] = {line_1, line_2, ...}
-    debug.breakpoint_stack = {} -- Format : linear table, element : {file=string, line=int, disabled=bool}
+ldb.load_debugger = function() 
+    print("Loading debugger !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    ldb.breakpoints = {} -- Format : breakpoints[file] = {line_1, line_2, ...}
+    ldb.breakpoint_stack = {} -- Format : linear table, element : {file=string, line=int, disabled=bool}
     debug.sethook(hook, "crl")
 end
 
-if not debug.__dbsocket_fd then
+if not ldb.__dbsocket_fd then
     local res, err = pcall(function () require "ldbcore" end)
     if not res then
         print(err)
     end
 end
 -- Assume it has been set in the require if not earlier
-if debug.__dbsocket_fd then
-    debug.load_debugger()
+if ldb.__dbsocket_fd then
+    ldb.load_debugger()
 end
