@@ -8,8 +8,6 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-const char * ldb_sock_addr = "/tmp/ldb_sock";
-
 #include <assert.h>
 #include <string.h>
 #include <sys/types.h>
@@ -18,6 +16,7 @@ const char * ldb_sock_addr = "/tmp/ldb_sock";
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int ldb_dbsock_read(lua_State *);
 int ldb_dbsock_send(lua_State *);
@@ -31,11 +30,17 @@ static const luaL_Reg ldb[] = {
 
 int luaopen_ldbcore(lua_State * l) {
     int loaded = 1;
+    char * ldb_sock_addr;
     char run_buf[] = "  "; /* Plus the final \0 */
     struct sockaddr_un addr;
+    int sock;
 
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    sock = socket(AF_UNIX, SOCK_STREAM, 0);
     addr.sun_family = AF_UNIX;
+    ldb_sock_addr = getenv("LDB_SOCK");
+    if (!ldb_sock_addr)
+        ldb_sock_addr = "/tmp/ldb_sock";
+
     strcpy(addr.sun_path, ldb_sock_addr);
 
     if (connect(sock, (struct sockaddr *)(&addr), sizeof(addr.sun_family)+strlen(addr.sun_path)) != 0) {

@@ -11,7 +11,6 @@
 #define LUA_LDBCORELIBNAME "ldbcore"
 
 struct lua_State;
-const char * ldb_sock_addr;
 
 int luaopen_ldbcore(lua_State * l);
 
