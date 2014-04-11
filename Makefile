@@ -45,7 +45,7 @@ ldbcore.o: ldbcore.c ldbcore.h
 libldbcore.so: ldbcore.o
 	$(CC) -shared -fPIC -o $@ $<
 
-tests.o: tests.c ldbcore.h
+tests.o: tests.c ldbcore.h libldbcore.so
 	$(CC) -o $@ $< $(CFLAGS) $(INCLUDES) -c
 
 tests: tests.o
