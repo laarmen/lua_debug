@@ -5,8 +5,9 @@ ldb is a tentative debugger for Lua that uses the builtin debug
 facilities and a unix socket to control the lua program flow in a Python
 script.
 
-The objective is to embed this script into gdb to be able to switch
-easily from C debugging to lua debugging.
+The initial objective is to embed this script into gdb to be able to switch
+easily from C debugging to lua debugging, although first a standalone debugger
+would be quite nice already.
 
 Patches welcome :)
 
