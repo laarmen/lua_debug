@@ -29,8 +29,6 @@ ldb.build_lookup_table = function (stack_level)
     return ret
 end
     
-local function_breakpoints = {} -- Breakpoints per function.
-
 ldb.build_breakpoints_table = function(function_infos)
     local filename = string.gmatch(function_infos.source, ".*@(.*)")()
     local affined_bps = {}
@@ -78,15 +76,36 @@ ldb.build_breakpoints_table = function(function_infos)
     return affined_bps
 end
 
+local state = {}
+local init_state = function(st)
+    st.function_breakpoints = {}
+    st.next_level = 0
+    st.nexting = false
+    st.stepping = false
+    st.initiated = true
+end
+
 local hook = function (event_type, line_nb)
-    local infos = debug.getinfo(2)
-    local bps = function_breakpoints[infos.func]
-    if not bps then
-        bps = ldb.build_breakpoints_table(debug.getinfo(2, "SL"))
-        function_breakpoints[infos.func] = bps
+    if not state.initiated then
+        init_state(state)
     end
 
-    local halted = bps[line_nb]
+    if state.nexting then
+        if event_type == "call" then
+            state.next_level = state.next_level+1
+        elseif event_type == "return" then
+            state.next_level = state.next_level-1
+        end
+    end
+
+    local infos = debug.getinfo(2)
+    local bps = state.function_breakpoints[infos.func]
+    if not bps then
+        bps = ldb.build_breakpoints_table(debug.getinfo(2, "SL"))
+        state.function_breakpoints[infos.func] = bps
+    end
+
+    local halted = state.stepping or (state.nexting and state.next_level <= 1) or bps[line_nb]
 
     local msg = ldb.dbsock_read(true)
     if msg and string.find(msg, 'halt', 1, true) == 1 then
@@ -95,13 +114,15 @@ local hook = function (event_type, line_nb)
     end
 
     if halted then
+        state.nexting = false
+        state.stepping = false
         local continue = false
         local lookup_stack = {}
         local stack_level = 1
         while not continue do
-            cmd = ldb.dbsock_read()
-            words = string.gmatch(cmd, word_pattern)
-            cmd_name = words()
+            local cmd = ldb.dbsock_read()
+            local words = string.gmatch(cmd, word_pattern)
+            local cmd_name = words()
 
             if cmd_name == "continue" then
                 ldb.dbsock_send("ACK continue")
@@ -118,6 +139,16 @@ local hook = function (event_type, line_nb)
                 ldb.dbsock_send("ACK down")
                 stack_level = math.min(1, stack_level-1)
 
+            elseif cmd_name == "step" then
+                ldb.dbsock_send("ACK step")
+                state.stepping = true
+                continue = true
+
+            elseif cmd_name == "next" then
+                ldb.dbsock_send("ACK next")
+                state.nexting = true
+                state.next_level = stack_level
+                continue = true
 
             elseif cmd_name == "backtrace" then
                 ldb.dbsock_send(debug.traceback(nil, 1+stack_level))

@@ -44,6 +44,14 @@ class Ldb(object):
         bp_nb = int(self._lua.recv(1024))
         return None if bp_nb == 0 else bp_nb
 
+    def step(self):
+        self._lua.send("step\n")
+        self._wait_ack("step")
+
+    def next(self):
+        self._lua.send("next\n")
+        self._wait_ack("next")
+
     def up(self):
         self._lua.send("up\n")
         self._wait_ack("up")
@@ -77,6 +85,10 @@ class Console(object):
                 "c": lambda: ldb.current().continue_(),
                 "backtrace": lambda: ldb.current().backtrace(),
                 "bt": lambda: ldb.current().backtrace(),
+                "next": lambda: ldb.current().next(),
+                "n": lambda: ldb.current().next(),
+                "step": lambda: ldb.current().step(),
+                "s": lambda: ldb.current().step(),
                 "up": lambda: ldb.current().up(),
                 "down": lambda: ldb.current().down(),
                 "break": lambda f, n: ldb.current().break_(f, n),
